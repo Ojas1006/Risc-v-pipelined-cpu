@@ -19,6 +19,7 @@ always @(*) begin
         4'd7: result = a ^ b; //xor
         4'd8: result = a >> b[4:0]; //srl
         4'd9: result = $signed(a) >>> b[4:0]; //sra - keeps the sign bit of a and shifts it to the right
+        4'd10: result = b; //lui - pass B through ALU
         default: result = 32'b0;
     endcase
 end

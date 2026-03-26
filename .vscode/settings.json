@@ -1,0 +1,5 @@
+{
+    "verilog.linting.linter": "verilator",
+    "verilog.linting.verilatorArguments": "--lint-only",
+    "verilog.linting.path": "verilator"
+}

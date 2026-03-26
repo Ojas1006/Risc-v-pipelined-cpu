@@ -90,9 +90,11 @@ wire [1:0] forwardB;
 //branch decision
 wire addermuxselect;
 wire branch_final; 
+wire [31:0] branch_target;
+assign branch_target = (a1 - 32'd4) + imm_idex;  // PC + imm - 4 because a1 is already PC+4
 
 pipeline_flush p_flush (
-    .branch(branch_final & BRANCH),
+    .branch(addermuxselect & Branch),
     .flush(flush)
 );
 
@@ -254,7 +256,6 @@ alu_control ac (
 EX_MEM ex_mem(
     .clk(clk),
     .rst(reset),
-    .flush(flush),
     .alu_result_in(alu_result),
     .zero_in(zero),
     .writedata_in(three_to_one_out2),
@@ -289,11 +290,11 @@ data_memory dm(
 );
 
 wire pc_sel;
-assign pc_sel = branch_final & BRANCH; //final branch decision is made here by combining the zero flag from the ALU with the branch control signal from the EX/MEM pipeline register
+assign pc_sel = addermuxselect & BRANCH; //final branch decision is made here by combining the zero flag from the ALU with the branch control signal from the EX/MEM pipeline register
 
 mux_2_1 mu(
     .in0(adderout1),               // PC+4 from IF stage adder
-    .in1(adder_exmem_out),           // Branch target address from EX stage adder
+    .in1(branch_target),           // Branch target address from EX stage adder
     .sel(pc_sel),
     .out(pc_in)
 );
@@ -333,8 +334,8 @@ forward_unit fu(
 
 branch_prediction bp(
     .funct3(funct4_out[2:0]),
-    .readData1(readData1),
-    .b(alu_32_b),
+    .readData1(three_to_one_out1),
+    .b(three_to_one_out2),
     .addermuxselect(addermuxselect)
 );
 

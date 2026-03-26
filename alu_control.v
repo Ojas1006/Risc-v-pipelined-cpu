@@ -18,7 +18,8 @@ always @(*) begin
                 default: operation = 4'd0;
             endcase
         end
-
+        
+        2'b11: operation = 4'd10;  // LUI → pass B through ALU
         default: operation = 4'd0;
     endcase
 end

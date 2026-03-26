@@ -1,7 +1,6 @@
 module EX_MEM(
     input clk,
     input rst,
-    input flush,
     input [31:0] alu_result_in, //from alu
     input zero_in, //from alu
     input [31:0] writedata_in, //from register file
@@ -19,7 +18,7 @@ module EX_MEM(
 );
 
 always @(posedge clk) begin
-    if (rst == 1'b1 || flush == 1'b1) begin
+    if (rst == 1'b1) begin
         alu_result_out <= 32'b0;
         zero_out <= 1'b0;
         writedata_out <= 32'b0;
