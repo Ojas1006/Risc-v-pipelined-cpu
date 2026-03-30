@@ -7,19 +7,21 @@ wire stall;
 wire flush;
 //register file
 wire [31:0] readdata1, readdata2;
-wire [31:0] write_data;
+reg [31:0] write_data;
 
 //control signals
 wire branch;
 wire memread;
-wire memtoreg;
+wire [1:0] memtoreg;
 wire [1:0] ALUOp;
 wire memWrite;
 wire alusrc;
 wire regWrite;
+wire jump;
+wire jalr;
 
 //program counter
-wire [31:0] pc_in;
+reg [31:0] pc_in;
 wire [31:0] pc_out;
 
 // adders
@@ -39,7 +41,7 @@ wire [6:0] funct7;
 wire [31:0] imm_data;
 
 wire [31:0] random; // carries pc+4 ahead
-
+wire [31:0] pc_plus_4_out;
 //ID/EX wires
 wire [31:0] a1; //PC+4 from ID/EX (for branch adder in EX)
 wire [4:0] RS1; 
@@ -49,10 +51,12 @@ wire [31:0] imm_idex; //passed to later stages for ALU src2
 wire [31:0] readData1; //passed to later stages for ALU src1
 wire [31:0] readData2; //passed to later stages for ALU src2
 
-wire Branch, MemRead, MemtoReg, MemWrite, ALUsrc, RegWrite;
+wire Branch, MemRead, MemWrite, ALUsrc, RegWrite;
+wire [1:0] MemtoReg;
 wire [1:0] ALUOp_idex;
-
 wire [3:0] funct4_out; //for ALU control
+wire Jump, Jalr;
+wire [31:0] pc_plus_4_idex; //passed to later stages for JAL instruction
 
 // 3 to 1 MUX and ALU input wires
 wire [31:0] three_to_one_out1;
@@ -66,7 +70,9 @@ wire exmem_zero; //zero flag from EX stage ALU
 wire [31:0] alu_exmem_out; //ALU result from EX stage
 wire [4:0] rd_exmem; //destination register number passed to MEM stage for write back
 
-wire BRANCH, MEMREAD, MEMTOREG, MEMWRITE, REGWRITE;
+wire BRANCH, MEMREAD, MEMWRITE, REGWRITE;
+wire [1:0] MEMTOREG;
+wire [31:0] pc_plus_4_exmem; //passed to later stages for JAL instruction
 
 //ALU
 wire [31:0] alu_result; 
@@ -80,8 +86,9 @@ wire [31:0] readdata; //data read from memory
 wire [31:0] muxin1; // ALU result carried into WB stage (for R/I-type writeback)
 wire [31:0] muxin2; // Memory read data carried into WB stage (for load writeback)
 wire [4:0]  memwbrd; // rd index finally used to address the register file write port
-wire memwb_memtoreg; // Selects muxin1 vs muxin2 → produces write_data
+wire [1:0] memwb_memtoreg; // Selects muxin1 vs muxin2 → produces write_data
 wire memwb_regwrite; //Enables write
+wire [31:0] pc_plus4_memwb; //passed to later stages for JAL instruction
 
 //Forwarding unit
 wire [1:0] forwardA;
@@ -90,11 +97,11 @@ wire [1:0] forwardB;
 //branch decision
 wire addermuxselect;
 wire branch_final; 
-wire [31:0] branch_target;
-assign branch_target = (a1 - 32'd4) + imm_idex;  // PC + imm - 4 because a1 is already PC+4
 
 pipeline_flush p_flush (
-    .branch(addermuxselect & Branch),
+    .branch(Branch),
+    .jump(Jump), //from ID/EX pipeline register
+    .zero(addermuxselect),
     .flush(flush)
 );
 
@@ -129,10 +136,12 @@ IF_ID if_id (
     .rst(reset),
     .flush(flush),
     .instruction(instruction),
-    .pc(adderout1),
+    .pc(pc_out),
+    .pc_plus_4_in(adderout1),
     .inst_write(stall),
     .inst(inst_ifid_out),
-    .pc_out(random)
+    .pc_out(random),
+    .pc_plus_4_out(pc_plus_4_out)
 );
 
 parser p(
@@ -154,7 +163,9 @@ control cu (
     .reg_write(regWrite),
     .mem_to_reg(memtoreg),
     .alu_op(ALUOp),
-    .alu_src(alusrc)
+    .alu_src(alusrc),
+    .jump(jump),
+    .jalr(jalr)
 );
 
 imm_gen ig (
@@ -192,6 +203,9 @@ ID_EX id_ex(
     .mem_to_reg(memtoreg),
     .alu_src(alusrc),
     .alu_op(ALUOp),
+    .pc_plus_4_in(pc_plus_4_out),
+    .jump(jump),
+    .jalr(jalr),
     .funct4({inst_ifid_out[30], inst_ifid_out[14:12]}), //funct4 is a combination of the funct3 and the most significant bit of funct7, which helps distinguish between different R-type instructions that have the same opcode
     .readdata1_out(readData1),
     .readdata2_out(readData2),
@@ -207,12 +221,15 @@ ID_EX id_ex(
     .rs1_out(RS1),
     .rs2_out(RS2),
     .rd_out(RD),
-    .funct4_out(funct4_out)
+    .funct4_out(funct4_out),
+    .pc_plus_4_out(pc_plus_4_idex),
+    .jump_out(Jump),
+    .jalr_out(Jalr)
 );
 
 adder adder2 (
     .a(a1),
-    .b(imm_idex), //shift immediate left by 1 for branch target calculation
+    .b(imm_idex), 
     .sum(adderout2)
 );
 
@@ -267,6 +284,7 @@ EX_MEM ex_mem(
     .reg_write(RegWrite),
     .mem_to_reg(MemtoReg),
     .addermuxselect_in(addermuxselect),
+    .pc_plus_4_in(pc_plus_4_idex),
     .alu_result_out(alu_exmem_out),
     .zero_out(exmem_zero),
     .writedata_out(write_Data),
@@ -277,7 +295,8 @@ EX_MEM ex_mem(
     .mem_write_out(MEMWRITE),
     .reg_write_out(REGWRITE),
     .mem_to_reg_out(MEMTOREG),
-    .addermuxselect_out(branch_final) 
+    .addermuxselect_out(branch_final),
+    .pc_plus_4_out(pc_plus_4_exmem) 
 );
 
 data_memory dm(
@@ -289,15 +308,15 @@ data_memory dm(
     .read_data(readdata)
 );
 
-wire pc_sel;
-assign pc_sel = addermuxselect & BRANCH; //final branch decision is made here by combining the zero flag from the ALU with the branch control signal from the EX/MEM pipeline register
-
-mux_2_1 mu(
-    .in0(adderout1),               // PC+4 from IF stage adder
-    .in1(branch_target),           // Branch target address from EX stage adder
-    .sel(pc_sel),
-    .out(pc_in)
-);
+//to determine next pc value
+always @(*) begin
+    if (Jump && Jalr)
+        pc_in = alu_result;          // JALR: rs1 + I-imm from ALU
+    else if (Jump || addermuxselect)
+        pc_in = adderout2;           // JAL or branch taken: PC + imm
+    else
+        pc_in = adderout1;           // PC + 4
+end
 
 MEM_WB mem_wb(
     .clk(clk),
@@ -307,19 +326,24 @@ MEM_WB mem_wb(
     .rd_in(rd_exmem),
     .reg_write_in(REGWRITE),
     .mem_to_reg_in(MEMTOREG),
+    .pc_plus_4_in(pc_plus_4_exmem),
     .alu_result_out(muxin1),
     .mem_data_out(muxin2),
     .rd_out(memwbrd),
     .reg_write_out(memwb_regwrite),
-    .mem_to_reg_out(memwb_memtoreg)
+    .mem_to_reg_out(memwb_memtoreg),
+    .pc_plus_4_out(pc_plus4_memwb)
 );
 
-mux_2_1 m4(
-    .in0(muxin1),
-    .in1(muxin2),
-    .sel(memwb_memtoreg),
-    .out(write_data)
-);
+// write back MUX
+always @(*) begin
+    case(memwb_memtoreg)
+        2'b00: write_data = muxin1;         // ALU result
+        2'b01: write_data = muxin2;         // memory data
+        2'b10: write_data = pc_plus4_memwb; // PC+4 for JAL/JALR
+        default: write_data = muxin1;
+    endcase
+end
 
 forward_unit fu(
     .rs_1(RS1),

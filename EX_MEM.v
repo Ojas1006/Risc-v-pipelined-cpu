@@ -6,15 +6,19 @@ module EX_MEM(
     input [31:0] writedata_in, //from register file
     input [4:0] rd_in, //passed all the way so register knows where to write back in later stages
     input [31:0] adder_in, //branch target address from EX adder
-    input branch, mem_read, mem_write, reg_write, mem_to_reg, 
+    input branch, mem_read, mem_write, reg_write,
+    input [1:0] mem_to_reg,
     input addermuxselect_in, //used to select between the adder output and the ALU output for the branch decision mux in the IF stage
+    input [31:0] pc_plus_4_in, //passed all the way to write back stage for JAL instruction
     output reg [31:0] alu_result_out,
     output reg zero_out,
     output reg [31:0] writedata_out,
     output reg [4:0] rd_out,
     output reg [31:0] adder_out,
-    output reg branch_out, mem_read_out, mem_write_out, reg_write_out, mem_to_reg_out,
-    output reg addermuxselect_out //used to select between the adder output and the ALU output for the branch decision mux in the IF stage
+    output reg branch_out, mem_read_out, mem_write_out, reg_write_out,
+    output reg [1:0] mem_to_reg_out,
+    output reg addermuxselect_out, //used to select between the adder output and the ALU output for the branch decision mux in the IF stage
+    output reg [31:0] pc_plus_4_out
 );
 
 always @(posedge clk) begin
@@ -28,8 +32,9 @@ always @(posedge clk) begin
         mem_read_out <= 1'b0;
         mem_write_out <= 1'b0;
         reg_write_out <= 1'b0;
-        mem_to_reg_out <= 1'b0;
+        mem_to_reg_out <= 2'b00;
         addermuxselect_out <= 1'b0;
+        pc_plus_4_out <= 32'b0;
     end
 
     else begin
@@ -44,6 +49,7 @@ always @(posedge clk) begin
         reg_write_out <= reg_write;
         mem_to_reg_out <= mem_to_reg;
         addermuxselect_out <= addermuxselect_in;
+        pc_plus_4_out <= pc_plus_4_in;
     end
 end
 endmodule

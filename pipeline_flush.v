@@ -1,5 +1,7 @@
 module pipeline_flush(
     input branch,
+    input jump,
+    input zero,
     output reg flush
 );
 
@@ -8,7 +10,7 @@ initial begin
 end
 
 always @(*) begin
-    if (branch == 1'b1) begin
+    if ((branch & zero)  == 1'b1 || jump == 1'b1) begin
         flush = 1'b1;
     end 
     
