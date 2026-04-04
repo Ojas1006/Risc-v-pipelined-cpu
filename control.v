@@ -85,7 +85,7 @@ always @(*) begin
             jalr = 1'b0;
         end
 
-        7'b110?111: begin
+        7'b110?111: begin 
             reg_write = 1'b1;
             mem_read = 1'b0;
             mem_write = 1'b0;
@@ -106,7 +106,7 @@ always @(*) begin
             endcase
         end
 
-        7'b0110111: begin
+        7'b0110111: begin   //lui
             branch = 1'b0;
             mem_read = 1'b0;
             mem_write = 1'b0;

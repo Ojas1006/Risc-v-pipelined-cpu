@@ -1,6 +1,8 @@
 module RISC_V_pipeline(
-    input clk,
-    input reset
+    input  clk,
+    input  reset,
+    output [31:0] pc_out_port,
+    output        regwrite_port
 );
 
 wire stall;
@@ -310,12 +312,16 @@ data_memory dm(
 
 //to determine next pc value
 always @(*) begin
-    if (Jump && Jalr)
-        pc_in = alu_result;          // JALR: rs1 + I-imm from ALU
-    else if (Jump || addermuxselect)
-        pc_in = adderout2;           // JAL or branch taken: PC + imm
-    else
-        pc_in = adderout1;           // PC + 4
+    if (Jump) begin
+        if (Jalr) pc_in = alu_result;          // JALR: rs1 + I-imm from ALU
+        else      pc_in = adderout2;           // JAL: PC + imm
+    end
+    else if (Branch && addermuxselect) begin
+        pc_in = adderout2;                     // Branch taken: PC + imm
+    end
+    else begin
+        pc_in = adderout1;                     // Fallthrough: PC + 4
+    end
 end
 
 MEM_WB mem_wb(
@@ -363,7 +369,9 @@ branch_prediction bp(
     .addermuxselect(addermuxselect)
 );
 
+
+// Synthesis keep-alive outputs
+assign pc_out_port   = pc_out;
+assign regwrite_port = memwb_regwrite;
+
 endmodule
-
-
-
