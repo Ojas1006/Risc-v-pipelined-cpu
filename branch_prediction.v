@@ -11,6 +11,8 @@ always @(*) begin
         3'b001: addermuxselect = (readData1 != b) ? 1 : 0; // bne
         3'b100: addermuxselect = ($signed(readData1) < $signed(b)) ? 1 : 0; // blt
         3'b101: addermuxselect = ($signed(readData1) >= $signed(b)) ? 1 : 0; // bge
+        3'b110: addermuxselect = (readData1 < b) ? 1 : 0; // bltu
+        3'b111: addermuxselect = (readData1 >= b) ? 1 : 0; // bgeu
         default: addermuxselect = 0;
     endcase
 end
