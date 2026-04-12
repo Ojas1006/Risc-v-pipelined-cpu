@@ -32,8 +32,17 @@ module ID_EX(
     output reg jalr_out
 );
 
+initial begin
+    readdata1_out = 32'b0; readdata2_out = 32'b0; immediate_out = 32'b0;
+    pc_out = 32'b0; pc_plus_4_out = 32'b0;
+    branch_out = 1'b0; mem_read_out = 1'b0; mem_write_out = 1'b0;
+    reg_write_out = 1'b0; alu_src_out = 1'b0; alu_op_out = 2'b0;
+    mem_to_reg_out = 2'b0; rs1_out = 5'b0; rs2_out = 5'b0;
+    rd_out = 5'b0; funct4_out = 4'b0; jump_out = 1'b0; jalr_out = 1'b0;
+end
+
 always @(posedge clk) begin
-    if (rst == 1'b1 || flush == 1'b1) begin
+    if (rst == 1'b1 || (flush == 1'b1 && jump == 1'b0)) begin
         readdata1_out <= 32'b0;
         readdata2_out <= 32'b0;
         immediate_out <= 32'b0;  

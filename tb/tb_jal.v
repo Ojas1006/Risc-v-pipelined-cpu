@@ -117,6 +117,8 @@ module tb_jal;
             $display(">>> FAILURES DETECTED\n");
 
         $finish;
+        #100;
+        $stop; 
     end
 
 endmodule

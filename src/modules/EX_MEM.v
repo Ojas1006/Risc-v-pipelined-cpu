@@ -21,6 +21,13 @@ module EX_MEM(
     output reg [31:0] pc_plus_4_out
 );
 
+initial begin
+    alu_result_out = 32'b0; zero_out = 1'b0; writedata_out = 32'b0;
+    rd_out = 5'b0; adder_out = 32'b0; branch_out = 1'b0;
+    mem_read_out = 1'b0; mem_write_out = 1'b0; reg_write_out = 1'b0;
+    mem_to_reg_out = 2'b0; addermuxselect_out = 1'b0; pc_plus_4_out = 32'b0;
+end
+
 always @(posedge clk) begin
     if (rst == 1'b1) begin
         alu_result_out <= 32'b0;

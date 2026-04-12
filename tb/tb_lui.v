@@ -70,6 +70,8 @@ module tb_lui;
             $display(">>> FAILURES DETECTED\n");
 
         $finish;
+        #100;
+        $stop;
     end
 
 endmodule

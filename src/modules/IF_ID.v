@@ -11,6 +11,10 @@ module IF_ID(
     output reg [31:0] pc_plus_4_out
 );
 
+initial begin
+    inst = 32'b0; pc_out = 32'b0; pc_plus_4_out = 32'b0;
+end
+
 always @(posedge clk)  begin
     if (rst == 1'b1 || flush == 1'b1) begin
         inst <= 32'b0;
