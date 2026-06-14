@@ -2,20 +2,20 @@ module pipeline_flush(
     input branch,
     input jump,
     input zero,
-    output reg flush
+    output reg flush_ifid,
+    output reg flush_idex,
+    output reg flush_exmem
 );
 
 initial begin
-    flush = 1'b0;
+    flush_ifid = 1'b0;
+    flush_idex = 1'b0;
+    flush_exmem = 1'b0;
 end
 
 always @(*) begin
-    if ((branch & zero)  == 1'b1 || jump == 1'b1) begin
-        flush = 1'b1;
-    end 
-    
-    else begin
-        flush = 1'b0;
-    end
+    flush_ifid = (branch & zero) | jump;
+    flush_idex = (branch & zero) | jump;
+    flush_exmem = (branch & zero);
 end
 endmodule

@@ -42,7 +42,7 @@ initial begin
 end
 
 always @(posedge clk) begin
-    if (rst == 1'b1 || (flush == 1'b1 && jump == 1'b0)) begin
+    if (rst == 1'b1 || flush == 1'b1) begin
         readdata1_out <= 32'b0;
         readdata2_out <= 32'b0;
         immediate_out <= 32'b0;  

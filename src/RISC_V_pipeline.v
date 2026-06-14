@@ -2,11 +2,14 @@ module RISC_V_pipeline(
     input  clk,
     input  reset,
     output [31:0] pc_out_port,
-    output        regwrite_port
+    output        regwrite_port,
+    output [31:0] debug_data_out
 );
 
 wire stall;
-wire flush;
+wire flush_ifid;
+wire flush_idex;
+wire flush_exmem;
 //register file
 wire [31:0] readdata1, readdata2;
 reg [31:0] write_data;
@@ -104,7 +107,9 @@ pipeline_flush p_flush (
     .branch(Branch),
     .jump(Jump), //from ID/EX pipeline register
     .zero(addermuxselect),
-    .flush(flush)
+    .flush_ifid(flush_ifid),
+    .flush_idex(flush_idex),
+    .flush_exmem(flush_exmem)
 );
 
 hazard_detection hu (
@@ -136,7 +141,7 @@ adder adder1 (
 IF_ID if_id (
     .clk(clk),
     .rst(reset),
-    .flush(flush),
+    .flush(flush_ifid),
     .instruction(instruction),
     .pc(pc_out),
     .pc_plus_4_in(adderout1),
@@ -190,7 +195,7 @@ register registerfile(
 ID_EX id_ex(
     .clk(clk),
     .rst(reset),
-    .flush(flush),
+    .flush(flush_idex),
     .readdata1_in(readdata1),
     .readdata2_in(readdata2),
     .immediate(imm_data),
@@ -275,6 +280,7 @@ alu_control ac (
 EX_MEM ex_mem(
     .clk(clk),
     .rst(reset),
+    .flush(flush_exmem),
     .alu_result_in(alu_result),
     .zero_in(zero),
     .writedata_in(three_to_one_out2),
@@ -373,5 +379,6 @@ branch_prediction bp(
 // Synthesis keep-alive outputs
 assign pc_out_port   = pc_out;
 assign regwrite_port = memwb_regwrite;
+assign debug_data_out = write_data;
 
 endmodule
