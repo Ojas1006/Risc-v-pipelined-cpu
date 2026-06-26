@@ -79,3 +79,25 @@ Synthesized and implemented using Xilinx Vivado, targeting an Artix-7 device.
 | LUTs | ~3313 |
 | Flip-Flops | ~2078 |
 | Power | 0.187 W |
+
+## ASIC Implementation Results
+ 
+Implemented using OpenLane with the Sky130A PDK (`sky130_fd_sc_hd` standard cell library).
+ 
+| Metric | Result |
+|---|---|
+| Flow | OpenLane + Sky130A PDK (`sky130_fd_sc_hd`) |
+| Fmax | ~136 MHz @ 10 ns clock |
+| Cell Area | ~175,065 µm² |
+| Die Size | ~879 × 879 µm |
+| Power | ~33.9 mW |
+ 
+`FP_CORE_UTIL = 0.20` and `PL_TARGET_DENSITY = 0.30` were chosen to prioritize timing closure over density.
+ 
+## Future Work / Roadmap
+ 
+- Tighter clock period sweep (5/7/8/10/15 ns) for true Fmax characterization
+- Move branch resolution to the ID stage
+- 2-bit dynamic branch predictor with a Branch History Table (BHT)
+- Carry-select adder for the ALU critical path
+- Validation against `riscv-tests`
