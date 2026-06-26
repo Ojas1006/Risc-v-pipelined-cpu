@@ -87,7 +87,8 @@ Implemented using OpenLane with the Sky130A PDK (`sky130_fd_sc_hd` standard cell
 | Metric | Result |
 |---|---|
 | Flow | OpenLane + Sky130A PDK (`sky130_fd_sc_hd`) |
-| Fmax | ~136 MHz @ 10 ns clock |
+| Fmax | ~100 MHz @ 10 ns clock |
+| WNS (Worst Negative Slack) | +2.66 ns |
 | Cell Area | ~175,065 µm² |
 | Die Size | ~879 × 879 µm |
 | Power | ~33.9 mW |
