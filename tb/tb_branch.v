@@ -26,20 +26,12 @@
 // =============================================================================
 
 module tb_branch;
-
-    // -------------------------------------------------------------------------
-    // DUT signals — matches RISC_V_pipeline ports exactly
-    // -------------------------------------------------------------------------
     reg         clk;
     reg         reset;
     wire [31:0] pc_out_port;
     wire        regwrite_port;
     wire [31:0] debug_data_out;
 
-    // -------------------------------------------------------------------------
-    // Instantiate top-level pipeline
-    // instruction_memory.v loads "TEST_BRANCH.dat" — rename branch_test.dat
-    // -------------------------------------------------------------------------
     RISC_V_pipeline dut (
         .clk          (clk),
         .reset        (reset),
@@ -54,11 +46,6 @@ module tb_branch;
     initial clk = 0;
     always #5 clk = ~clk;
 
-    // -------------------------------------------------------------------------
-    // Read a register via hierarchical path.
-    // Instance path: dut -> registerfile (module: register) -> registers array
-    // If your array is named differently, change registers[rn] below.
-    // -------------------------------------------------------------------------
     function [31:0] read_reg;
         input [4:0] rn;
         begin
@@ -66,9 +53,6 @@ module tb_branch;
         end
     endfunction
 
-    // -------------------------------------------------------------------------
-    // Pass/fail accounting
-    // -------------------------------------------------------------------------
     integer pass_count;
     integer fail_count;
 
@@ -88,10 +72,8 @@ module tb_branch;
         end
     endtask
 
-    // -------------------------------------------------------------------------
     // Simulation
-    // -------------------------------------------------------------------------
-
+    
     initial begin
         pass_count = 0;
         fail_count = 0;
@@ -174,25 +156,6 @@ module tb_branch;
         $finish;
         #100;
         $stop;
-    end
-
-    // -------------------------------------------------------------------------
-    // Waveform dump — open tb_branch.vcd in GTKWave to inspect failures
-    // -------------------------------------------------------------------------
-    initial begin
-        $dumpfile("tb_branch.vcd");
-        $dumpvars(0, tb_branch);
-    end
-
-    initial begin
-    @(negedge reset);
-    repeat(35) begin
-        @(posedge clk); #1;
-        $display("PC=%0d  flush_ifid=%b flush_idex=%b  x6=%0d",
-            dut.pc_out_port,
-            dut.flush_ifid,
-            dut.flush_idex,
-            dut.registerfile.regs[6]);
     end
 end
 
