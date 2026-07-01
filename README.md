@@ -66,6 +66,10 @@ Key architectural features:
 
 - Tested jump, branch, flush, forwarding unit and other simple instructions
 
+## Tradeoffs
+
+- JAL/JALR resolution is deferred to the EX stage to reuse the existing Branch Target Adder rather than duplicating adder logic in ID. This trades one additional bubble cycle per jump for reduced adder area — flush_ifid and flush_idex are asserted together off ID/EX.Jump to clear both fetched instructions in the pipeline.
+
 ## FPGA Implementation Results (Artix-7)
 
 Synthesized and implemented using Xilinx Vivado, targeting an Artix-7 device.
