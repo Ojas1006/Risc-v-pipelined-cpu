@@ -106,3 +106,6 @@ Implemented using OpenLane with the Sky130A PDK (`sky130_fd_sc_hd` standard cell
 - 2-bit dynamic branch predictor with a Branch History Table (BHT)
 - Carry-select adder for the ALU critical path
 - Validation against `riscv-tests`
+
+## Google drive containing the gds file 
+- https://drive.google.com/drive/folders/1zjlA9a40-F8W_0Do7mvUMcQbvIHsKogZ
